@@ -1,0 +1,18 @@
+# configuration files
+*.yaml
+*.json
+
+# virtual envs
+venv/
+env/
+.env
+
+# IDE
+.vscode/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# python objects
+*.py[cod]
+__pycache__/

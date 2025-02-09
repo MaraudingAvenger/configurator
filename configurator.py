@@ -15,6 +15,7 @@ from textual.message import Message
 from textual.validation import Validator, ValidationResult
 from textual.widgets import Input, Header, Button
 from textual.containers import HorizontalGroup, VerticalScroll
+from textual.errors import TextualError
 
 import yaml
 
@@ -88,7 +89,6 @@ class BottomBar(HorizontalGroup):
         height: 3;
         dock: bottom;
         background: $panel;
-
         content-align: center middle;
     }
     '''
@@ -109,6 +109,11 @@ class Row(HorizontalGroup):
     def compose(self) -> ComposeResult:
         yield self.k
         yield self.v
+
+    async def on_input_changed(self, event: Input.Changed) -> None:
+        self.k.id = event.value
+        self.v.id = f'{event.value}_value'
+
 
 class QuitButton(Button):
 
@@ -203,15 +208,17 @@ class Configurator(App):
 
     def on_save_button_pressed(self, message: SaveButton.Pressed) -> None:
         fn = self.query_one('#config_filename').value
+        self.keys = {key.value for key in self.query('.keystr') if not key.value == 'new_key'}
+        self.config = Config()
 
-        try:
-            self.config.pop('new_key')
-        except KeyError:
-            pass
-        
         for key in self.keys:
-            if not key == "new_key":
-                self.config[key] = self.query_one(f'#{key}_value').value
+            try:
+                v = self.query_one(f'#{key}_value').value
+            except Exception as e:
+                self.notify(f'Error: {e}', title='Error', timeout=3)
+                return
+            self.config[key] = v
+        
         self.config.save(fn)
 
 

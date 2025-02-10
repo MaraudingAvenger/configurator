@@ -15,6 +15,7 @@ from textual.message import Message
 from textual.validation import Validator, ValidationResult
 from textual.widgets import Input, Header, Button
 from textual.containers import HorizontalGroup, VerticalScroll
+from textual.errors import TextualError
 
 import yaml
 
@@ -88,7 +89,6 @@ class BottomBar(HorizontalGroup):
         height: 3;
         dock: bottom;
         background: $panel;
-
         content-align: center middle;
     }
     '''
@@ -109,6 +109,11 @@ class Row(HorizontalGroup):
     def compose(self) -> ComposeResult:
         yield self.k
         yield self.v
+
+    async def on_input_changed(self, event: Input.Changed) -> None:
+        self.k.id = event.value
+        self.v.id = f'{event.value}_value'
+
 
 class QuitButton(Button):
 

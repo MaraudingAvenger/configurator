@@ -198,26 +198,26 @@ class Configurator(App):
                 yield QuitButton('Quit', variant='primary', name='quit_button')
 
     def on_quit_button_pressed(self, message: QuitButton.Pressed) -> None:
-        self.on_save_button_pressed(SaveButton.Pressed())
+        self.on_save_button_pressed(SaveButton.Pressed(), notify=False)
         self.exit()
 
-    def on_save_button_pressed(self, message: SaveButton.Pressed) -> None:
+    def on_save_button_pressed(self, message: SaveButton.Pressed, notify: bool=True) -> None:
         fn = self.query_one('#config_filename').value
-
-        try:
-            self.config.pop('new_key')
-        except KeyError:
-            pass
         
-        for key in self.keys:
-            if not key == "new_key":
-                self.config[key] = self.query_one(f'#{key}_value').value
+        self.config = Config()
+        self.config.update({
+            row.k.value: row.v.value
+            for row in self.query('Row')
+            if not row.k.value == 'new_key'
+        })
+        self.keys = list(self.config.keys())
         self.config.save(fn)
 
-
-        self.notify(f'Configuration saved to {fn} successfully.', title='Saved', timeout=3)
+        if notify:
+            self.notify(f'Configuration saved to {fn} successfully.', title='Saved', timeout=3)
 
     def on_add_row_button_pressed(self, message: AddRowButton.Pressed) -> None:
+        self.on_save_button_pressed(SaveButton.Pressed(), notify=False)
         self.keys.append('new_key')
         self.refresh(recompose=True)
 
